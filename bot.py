@@ -8,7 +8,6 @@ from aiogram.fsm.context import FSMContext
 from aiogram.filters import Command
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 
-# .env faylidan o'zgaruvchilarni yuklash
 load_dotenv()
 
 BOT_TOKEN = os.getenv("BOT_TOKEN")
@@ -19,22 +18,21 @@ bot = Bot(token=BOT_TOKEN)
 dp = Dispatcher()
 
 
-# Ro'yxatdan o'tish bosqichlari (FSM)
 class Registration(StatesGroup):
     waiting_for_name = State()
     waiting_for_surname = State()
 
 
-# Maxsus insonlar ro'yxati
 SPECIAL_USERS = [
-    {"name": "Sabrina", "surname": "Nuraliyeva"},
-    {"name": "Hosila", "surname": "Bo'riyeva"},
-    {"name": "Hosila", "surname": "Boriyeva"}
+    {"name": "sabrina", "surname": "nuraliyeva"},
+    {"name": "hosila", "surname": "bo'riyeva"},
+    {"name": "hosila", "surname": "boriyeva"}
 ]
 
 
 @dp.message(Command("start"))
 async def cmd_start(message: types.Message, state: FSMContext):
+    await state.clear()  # Start bosilganda eski qolib ketgan statelarni tozalaydi
     await message.answer(
         "Xush kelibsiz! Botdan foydalanish uchun roʻyxatdan oʻtishingiz kerak.\n\n"
         "Iltimos, ismingizni kiriting:"
@@ -51,36 +49,27 @@ async def process_name(message: types.Message, state: FSMContext):
 
 @dp.message(Registration.waiting_for_surname)
 async def process_surname(message: types.Message, state: FSMContext):
-    # Familiyani ham saqlaymiz
     await state.update_data(surname=message.text.strip())
 
-    # [TO'G'RILANDI] FSM dan barcha ma'lumotlarni yuklab olamiz
+    # Ma'lumotlarni olish
     user_data = await state.get_data()
-
-    # [TO'G'RILANDI] Ro'yxatdan o'tish tugagani uchun holatni tozalaymiz
     await state.clear()
 
-    input_name = user_data['name'].strip().lower()
-    input_surname = user_data['surname'].strip().lower()
+    input_name = str(user_data.get('name', '')).strip().lower()
+    input_surname = str(user_data.get('surname', '')).strip().lower()
 
-    # 1. Avval inline tugmalarni hamma uchun umumiy qilib yaratib olamiz
+    # Tugmalarni yasash
     builder = InlineKeyboardBuilder()
-    builder.row(
-        types.InlineKeyboardButton(text="📞 Telefon orqali bog'lanish", url=f"tel:{Sizning_Tel}")
-    )
-    builder.row(
-        types.InlineKeyboardButton(text="✈️ Telegram orqali bog'lanish", url=f"https://t.me/{Sizning_User}")
-    )
+    builder.row(types.InlineKeyboardButton(text="📞 Telefon orqali bog'lanish", url=f"tel:{Sizning_Tel}"))
+    builder.row(types.InlineKeyboardButton(text="✈️ Telegram orqali bog'lanish", url=f"https://t.me/{Sizning_User}"))
 
-    # 2. Maxsus foydalanuvchini tekshiramiz
+    # Tekshirish
     is_special = False
     for user in SPECIAL_USERS:
-        # Ro'yxatdagi ism va familiyalarni ham majburiy kichik harfga o'tkazib tekshiramiz
-        if str(user['name']).strip().lower() == input_name and str(user['surname']).strip().lower() == input_surname:
+        if user['name'] == input_name and user['surname'] == input_surname:
             is_special = True
             break
 
-    # 3. Natijaga qarab foydalanuvchiga xabar yuboramiz
     if is_special:
         love_message = (
             "Men seni doimo sevganman bu bizning botimiz bu botni sen uchun ochganman \n"
@@ -89,7 +78,6 @@ async def process_surname(message: types.Message, state: FSMContext):
         )
         await message.answer(text=love_message, reply_markup=builder.as_markup())
     else:
-        # Oddiy foydalanuvchilar uchun xabar
         await message.answer(
             text="Xush kelibsiz! Siz muvaffaqiyatli ro'yxatdan o'tdingiz. Bot administratorlari tez orada siz bilan bog'lanishadi.",
             reply_markup=builder.as_markup()
@@ -97,18 +85,14 @@ async def process_surname(message: types.Message, state: FSMContext):
 
 
 async def main():
-    # Render port xatoligini aldash uchun veb-server yurgizish
     app = web.Application()
     runner = web.AppRunner(app)
     await runner.setup()
-
     port = int(os.environ.get("PORT", 10000))
     site = web.TCPSite(runner, '0.0.0.0', port)
     await site.start()
 
     print("Bot muvaffaqiyatli ishga tushdi...")
-
-    # Botni polling rejimida ishga tushirish
     await dp.start_polling(bot)
 
 
