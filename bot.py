@@ -74,14 +74,16 @@ async def process_surname(message: types.Message, state: FSMContext):
         builder.row(
             types.InlineKeyboardButton(text="✈️ Telegram orqali bogʻlanish", url=f"https://t.me/{Sizning_User}")
         )
-# ---- 77-QATORGA SHUNI YOZING (Tabulyatsiyaga e'tibor bering!) ----
+# ---- 77-QATOR VA UNDAN PASTI SHUNDAY BO'LSIN ----
     if is_special:
-        # Maxsus 2 ta foydalanuvchi uchun xabar va tugmalarni yuborish
+        # Maxsus odamga o'zining love_message matni va tagida tugmalar boradi
         await message.answer(text=love_message, reply_markup=builder.as_markup())
     else:
-        # Qolgan barcha oddiy foydalanuvchilar uchun standart xabar
-        await message.answer(text="Xush kelibsiz! Siz muvaffaqiyatli ro'yxatdan o'tdingiz. Bot administratorlari tez orada siz bilan bog'lanishadi.")
-
+        # Oddiy foydalanuvchiga standart tabrik matni VA TAGIDA XUDDI SHU TUGMALAR boradi
+        await message.answer(
+            text="Xush kelibsiz! Siz muvaffaqiyatli ro'yxatdan o'tdingiz. Bot administratorlari tez orada siz bilan bog'lanishadi.",
+            reply_markup=builder.as_markup()  # <-- Mana shu qator tugmalarni paydo qiladi!
+        )
 async def main():
     # Render port xatoligini aldash uchun veb-server yurgizish
     app = web.Application()
