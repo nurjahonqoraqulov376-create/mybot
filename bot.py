@@ -18,17 +18,20 @@ Sizning_User = os.getenv("MY_USERNAME")
 bot = Bot(token=BOT_TOKEN)
 dp = Dispatcher()
 
+
 # Ro'yxatdan o'tish bosqichlari (FSM)
 class Registration(StatesGroup):
     waiting_for_name = State()
     waiting_for_surname = State()
 
+
 # Maxsus insonlar ro'yxati
 SPECIAL_USERS = [
     {"name": "Sabrina", "surname": "Nuraliyeva"},
     {"name": "Hosila", "surname": "Bo'riyeva"},
-    {"name": "Hosila", "surname": "Boriyeva"} 
+    {"name": "Hosila", "surname": "Boriyeva"}
 ]
+
 
 @dp.message(Command("start"))
 async def cmd_start(message: types.Message, state: FSMContext):
@@ -38,59 +41,67 @@ async def cmd_start(message: types.Message, state: FSMContext):
     )
     await state.set_state(Registration.waiting_for_name)
 
+
 @dp.message(Registration.waiting_for_name)
 async def process_name(message: types.Message, state: FSMContext):
     await state.update_data(name=message.text.strip())
     await message.answer("Rahmat. Endi familiyangizni kiriting:")
     await state.set_state(Registration.waiting_for_surname)
 
+
 @dp.message(Registration.waiting_for_surname)
 async def process_surname(message: types.Message, state: FSMContext):
+    # Familiyani ham saqlaymiz
     await state.update_data(surname=message.text.strip())
-    
+
+    # [TO'G'RILANDI] FSM dan barcha ma'lumotlarni yuklab olamiz
     user_data = await state.get_data()
-    await state.clear() 
 
-    input_name = user_data['name'].lower()
-    input_surname = user_data['surname'].lower()
+    # [TO'G'RILANDI] Ro'yxatdan o'tish tugagani uchun holatni tozalaymiz
+    await state.clear()
 
+    input_name = user_data['name'].strip().lower()
+    input_surname = user_data['surname'].strip().lower()
+
+    # 1. Avval inline tugmalarni hamma uchun umumiy qilib yaratib olamiz
+    builder = InlineKeyboardBuilder()
+    builder.row(
+        types.InlineKeyboardButton(text="📞 Telefon orqali bog'lanish", url=f"tel:{Sizning_Tel}")
+    )
+    builder.row(
+        types.InlineKeyboardButton(text="✈️ Telegram orqali bog'lanish", url=f"https://t.me/{Sizning_User}")
+    )
+
+    # 2. Maxsus foydalanuvchini tekshiramiz
     is_special = False
     for user in SPECIAL_USERS:
-        if input_name == user['name'].lower() and input_surname == user['surname'].lower():
+        # Ro'yxatdagi ism va familiyalarni ham majburiy kichik harfga o'tkazib tekshiramiz
+        if str(user['name']).strip().lower() == input_name and str(user['surname']).strip().lower() == input_surname:
             is_special = True
             break
 
+    # 3. Natijaga qarab foydalanuvchiga xabar yuboramiz
     if is_special:
         love_message = (
-            "Men seni doimo sevganman bu bizning botimiz bu botni sen uchun ochganman "
+            "Men seni doimo sevganman bu bizning botimiz bu botni sen uchun ochganman \n"
             "Menga sendan boshqasi kerakmas iltimos menga qayt 🥺\n\n"
             "👉 Bot egasidan"
         )
-        
-        builder = InlineKeyboardBuilder()
-        builder.row(
-            types.InlineKeyboardButton(text="📞 Telefon orqali bogʻlanish", url=f"tel:{Sizning_Tel}")
-        )
-        builder.row(
-            types.InlineKeyboardButton(text="✈️ Telegram orqali bogʻlanish", url=f"https://t.me/{Sizning_User}")
-        )
-# ---- 77-QATOR VA UNDAN PASTI SHUNDAY BO'LSIN ----
-    if is_special:
-        # Maxsus odamga o'zining love_message matni va tagida tugmalar boradi
         await message.answer(text=love_message, reply_markup=builder.as_markup())
     else:
-        # Oddiy foydalanuvchiga standart tabrik matni VA TAGIDA XUDDI SHU TUGMALAR boradi
+        # Oddiy foydalanuvchilar uchun xabar
         await message.answer(
             text="Xush kelibsiz! Siz muvaffaqiyatli ro'yxatdan o'tdingiz. Bot administratorlari tez orada siz bilan bog'lanishadi.",
-            reply_markup=builder.as_markup()  # <-- Mana shu qator tugmalarni paydo qiladi!
+            reply_markup=builder.as_markup()
         )
+
+
 async def main():
     # Render port xatoligini aldash uchun veb-server yurgizish
     app = web.Application()
     runner = web.AppRunner(app)
     await runner.setup()
-    # Render avtomatik taqdim etadigan portni oladi, bo'lmasa 10000 ni ishlatadi
-    import os
+
     port = int(os.environ.get("PORT", 10000))
     site = web.TCPSite(runner, '0.0.0.0', port)
     await site.start()
@@ -102,6 +113,4 @@ async def main():
 
 
 if __name__ == "__main__":
-    import asyncio
-
     asyncio.run(main())
