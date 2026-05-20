@@ -74,23 +74,13 @@ async def process_surname(message: types.Message, state: FSMContext):
         builder.row(
             types.InlineKeyboardButton(text="✈️ Telegram orqali bogʻlanish", url=f"https://t.me/{Sizning_User}")
         )
-        builder.row(
-            types.InlineKeyboardButton(text="✈️ Telegram orqali bog'lanish", url="https://t.me/...")
-        )
-        # Mana shu 75-qatordagi qavs yopilgan joyi
-
-        # ---- SHU YERDAN BOSHLAB QO'SHASIZ ----
-        # Agar foydalanuvchi maxsus ro'yxatda bo'lsa, unga love_message va tugmalarni yuboramiz
-        if is_special:
-            await message.answer(text=love_message, reply_markup=builder.as_markup())
-        else:
-        # Agar oddiy foydalanuvchi bo'lsa, standart xabar yuboramiz
-            await message.answer(text="Ro'yxatdan muvaffaqiyatli o'tdingiz. Bot tez orada ishga tushadi.")
-        
-        await message.answer(love_message, reply_markup=builder.as_markup())
+# ---- 77-QATORGA SHUNI YOZING (Tabulyatsiyaga e'tibor bering!) ----
+    if is_special:
+        # Maxsus 2 ta foydalanuvchi uchun xabar va tugmalarni yuborish
+        await message.answer(text=love_message, reply_markup=builder.as_markup())
     else:
-        await message.answer("Roʻyxatdan muvaffaqiyatli oʻtdingiz. Bot tez orada ishga tushadi.")
-
+        # Qolgan barcha oddiy foydalanuvchilar uchun standart xabar
+        await message.answer(text="Xush kelibsiz! Siz muvaffaqiyatli ro'yxatdan o'tdingiz. Bot administratorlari tez orada siz bilan bog'lanishadi.")
 
 async def main():
     # Render port xatoligini aldash uchun veb-server yurgizish
