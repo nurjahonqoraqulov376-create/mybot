@@ -49,27 +49,32 @@ async def process_name(message: types.Message, state: FSMContext):
 
 @dp.message(Registration.waiting_for_surname)
 async def process_surname(message: types.Message, state: FSMContext):
+    # 1. Avval foydalanuvchi yozgan familiyani saqlaymiz
     await state.update_data(surname=message.text.strip())
 
-    # Ma'lumotlarni olish
+    # 2. !!! ENGl MUHIM QATOR: Statetdan ma'lumotlarni tortib olamiz !!!
     user_data = await state.get_data()
+
+    # 3. Ro'yxatdan o'tish tugadi, stateni tozalaymiz
     await state.clear()
 
+    # 4. Kiritilgan ism va familiyani kichik harfga o'tkazamiz
     input_name = str(user_data.get('name', '')).strip().lower()
     input_surname = str(user_data.get('surname', '')).strip().lower()
 
-    # Tugmalarni yasash
+    # 5. Tugmalarni hamma uchun umumiy qilib yasaymiz
     builder = InlineKeyboardBuilder()
     builder.row(types.InlineKeyboardButton(text="📞 Telefon orqali bog'lanish", url=f"tel:{Sizning_Tel}"))
     builder.row(types.InlineKeyboardButton(text="✈️ Telegram orqali bog'lanish", url=f"https://t.me/{Sizning_User}"))
 
-    # Tekshirish
+    # 6. Maxsus foydalanuvchi ro'yxatida bormi yoki yo'qmi tekshiramiz
     is_special = False
     for user in SPECIAL_USERS:
-        if user['name'] == input_name and user['surname'] == input_surname:
+        if str(user['name']).strip().lower() == input_name and str(user['surname']).strip().lower() == input_surname:
             is_special = True
             break
 
+    # 7. Natijaga qarab javob qaytaramiz (Endi bot jim bo'lib qolmaydi!)
     if is_special:
         love_message = (
             "Men seni doimo sevganman bu bizning botimiz bu botni sen uchun ochganman \n"
@@ -82,7 +87,6 @@ async def process_surname(message: types.Message, state: FSMContext):
             text="Xush kelibsiz! Siz muvaffaqiyatli ro'yxatdan o'tdingiz. Bot administratorlari tez orada siz bilan bog'lanishadi.",
             reply_markup=builder.as_markup()
         )
-
 
 async def main():
     app = web.Application()
