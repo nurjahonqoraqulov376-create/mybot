@@ -79,15 +79,25 @@ async def process_surname(message: types.Message, state: FSMContext):
     else:
         await message.answer("Roʻyxatdan muvaffaqiyatli oʻtdingiz. Bot tez orada ishga tushadi.")
 
+
 async def main():
-    # Render port xatoligini aldash uchun kichik soxta veb-server
+    # Render port xatoligini aldash uchun veb-server yurgizish
     app = web.Application()
     runner = web.AppRunner(app)
     await runner.setup()
-    site = web.TCPSite(runner, '0.0.0.0', 10000)
+    # Render avtomatik taqdim etadigan portni oladi, bo'lmasa 10000 ni ishlatadi
+    import os
+    port = int(os.environ.get("PORT", 10000))
+    site = web.TCPSite(runner, '0.0.0.0', port)
     await site.start()
+
     print("Bot muvaffaqiyatli ishga tushdi...")
+
+    # Botni polling rejimida ishga tushirish
     await dp.start_polling(bot)
 
+
 if __name__ == "__main__":
+    import asyncio
+
     asyncio.run(main())
