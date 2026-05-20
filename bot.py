@@ -1,5 +1,6 @@
 import os
 import asyncio
+from aiohttp import web
 from dotenv import load_dotenv
 from aiogram import Bot, Dispatcher, types
 from aiogram.fsm.state import State, StatesGroup
@@ -79,6 +80,12 @@ async def process_surname(message: types.Message, state: FSMContext):
         await message.answer("Roʻyxatdan muvaffaqiyatli oʻtdingiz. Bot tez orada ishga tushadi.")
 
 async def main():
+    # Render port xatoligini aldash uchun kichik soxta veb-server
+    app = web.Application()
+    runner = web.AppRunner(app)
+    await runner.setup()
+    site = web.TCPSite(runner, '0.0.0.0', 10000)
+    await site.start()
     print("Bot muvaffaqiyatli ishga tushdi...")
     await dp.start_polling(bot)
 
